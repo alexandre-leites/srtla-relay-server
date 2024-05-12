@@ -38,5 +38,5 @@ ENV LOSSMAXTTL=40
 ENV LATENCY=2000
 
 # Run services with environment variables
-CMD /opt/srt/srt-live-transmit -st:yes "srt://127.0.0.1:5002?mode=listener&lossmaxttl=${LOSSMAXTTL}&latency=${LATENCY}" "srt://0.0.0.0:5001?mode=listener" 2>&1 | tee /dev/console & \
-    /opt/srtla/srtla_rec 5000 127.0.0.1 5002 2>&1 | tee /dev/console
+CMD (/opt/srt/srt-live-transmit -st:yes "srt://127.0.0.1:5002?mode=listener&lossmaxttl=${LOSSMAXTTL}&latency=${LATENCY}" "srt://0.0.0.0:5001?mode=listener" 2>&1 | sed 's/^/[srt-live-transmit] /' | tee /dev/console) & \
+    (/opt/srtla/srtla_rec 5000 127.0.0.1 5002 2>&1 | sed 's/^/[srtla-rec] /' | tee /dev/console)

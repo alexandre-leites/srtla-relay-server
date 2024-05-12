@@ -22,8 +22,8 @@ RUN make srtla_rec
 # Stage 2: Final stage
 FROM ubuntu:latest
 
-# Expose ports
-EXPOSE 5000 5001
+# Expose UDP ports
+EXPOSE 5000/udp 5001/udp
 
 # Copy executables from build stage
 COPY --from=build /tmp/srt/srt-live-transmit /opt/srt/srt-live-transmit

@@ -8,7 +8,7 @@ RUN apt-get update && \
 # Clone repositories
 WORKDIR /tmp
 RUN git clone https://github.com/BELABOX/srtla.git && \
-    git clone https://github.com/BELABOX/srt.git
+    git clone https://github.com/alexandre-leites/srt
 
 # Build SRT
 WORKDIR /tmp/srt

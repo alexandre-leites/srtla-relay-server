@@ -1,9 +1,9 @@
 # Stage 1: Build stage
-FROM alpine:latest AS build
+FROM ubuntu:latest AS build
 
 # Install dependencies
-RUN apk update && \
-    apk add --no-cache sudo tclsh pkgconfig cmake openssl-dev build-base git
+RUN apt-get update && \
+    apt-get install -y sudo tclsh pkg-config cmake libssl-dev build-essential git
 
 # Clone repositories
 WORKDIR /tmp
@@ -20,7 +20,7 @@ WORKDIR /tmp/srtla
 RUN make srtla_rec
 
 # Stage 2: Final stage
-FROM alpine:latest
+FROM ubuntu:latest
 
 # Expose ports
 EXPOSE 5000 5001
@@ -30,8 +30,8 @@ COPY --from=build /tmp/srt/srt-live-transmit /opt/srt/srt-live-transmit
 COPY --from=build /tmp/srtla/srtla_rec /opt/srtla/srtla_rec
 
 # Install runtime dependencies
-RUN apk update && \
-    apk add --no-cache bash
+RUN apt-get update && \
+    apt-get install -y bash
 
 # Set default values for environment variables
 ENV LOSSMAXTTL=40

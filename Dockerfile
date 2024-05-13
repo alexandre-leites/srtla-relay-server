@@ -40,5 +40,5 @@ ENV SOURCE_URI="srt://127.0.0.1:5002?mode=listener&lossmaxttl=${LOSSMAXTTL}&late
 ENV DESTINATION_URI="srt://0.0.0.0:5001?mode=listener"
 
 # Run services with environment variables
-CMD (/opt/srt/srt-live-transmit -st:yes "${SOURCE_URI}" "${DESTINATION_URI}" 2>&1 | sed 's/^/[srt-live-transmit] /' | tee /dev/console) & \
-    (/opt/srtla/srtla_rec 5000 127.0.0.1 5002 2>&1 | sed 's/^/[srtla-rec] /' | tee /dev/console)
+CMD (/opt/srt/srt-live-transmit -st:yes "${SOURCE_URI}" "${DESTINATION_URI}" 2>&1 | tee /dev/console) & \
+    (/opt/srtla/srtla_rec 5000 127.0.0.1 5002 2>&1 | tee /dev/console)

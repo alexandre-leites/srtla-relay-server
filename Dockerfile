@@ -34,7 +34,7 @@ RUN git checkout master && \
 WORKDIR /tmp/srtla
 
 # Checkout the master branch and build srtla library
-RUN git checkout master && \
+RUN git checkout main && \
     make -j8 srtla_rec
 
 # Switch to the sls repository directory

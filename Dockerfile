@@ -59,9 +59,7 @@ RUN apk update && \
         libstdc++
 
 # Add a user for running the application
-RUN adduser -D srt && \
-    mkdir /etc/sls /logs && \
-    chown srt /logs
+RUN mkdir /etc/sls /logs
 
 # Copy necessary files and directories from the build stage
 COPY --from=build /usr/local/bin/srt-* /usr/local/bin/
@@ -86,9 +84,8 @@ ENV SLS_DEFAULT_SID     live/feed1
 # Expose ports
 EXPOSE $SLS_HTTP_PORT/tcp $SRTLA_PORT/udp $SLS_SRT_PORT/udp
 
-# Set the user to srt and the working directory to /home/srt
-USER srt
-WORKDIR /home/srt
+# Set working dir to /opt
+WORKDIR /opt
 
 # Copy your entrypoint script
 COPY entrypoint.sh /entrypoint.sh

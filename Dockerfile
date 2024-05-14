@@ -71,7 +71,7 @@ COPY --from=build /tmp/srt/srt-live-transmit /usr/local/bin/srt-live-transmit
 COPY --from=build /tmp/srtla/srtla_rec /usr/local/bin/srtla_rec
 
 # Copy the sls.conf file to /etc/sls directory
-COPY sls.conf /etc/sls/
+COPY --from=build /tmp/srt-live-server/sls.conf /etc/sls/
 
 # Create a volume for logs
 VOLUME /logs

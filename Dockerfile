@@ -1,44 +1,100 @@
-# Stage 1: Build stage
-FROM ubuntu:latest AS build
+# Use Alpine as a build environment
+FROM alpine:latest as build
 
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y sudo tclsh pkg-config cmake libssl-dev build-essential git
+# Update package repository and install necessary dependencies
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        git \
+        linux-headers \
+        alpine-sdk \
+        cmake \
+        tcl \
+        openssl-dev \
+        zlib-dev
 
-# Clone repositories
+# Set the working directory to /tmp
 WORKDIR /tmp
-RUN git clone https://github.com/BELABOX/srtla.git && \
-    git clone https://github.com/alexandre-leites/srt
 
-# Build SRT
+# Clone the required repositories
+RUN git clone --depth 1 https://github.com/alexandre-leites/srtla.git && \
+    git clone --depth 1 https://github.com/alexandre-leites/srt.git && \
+	git clone --depth 1 https://github.com/alexandre-leites/srt-live-server.git
+
+# Switch to the srt repository directory
 WORKDIR /tmp/srt
-RUN ./configure && \
-    make
 
-# Build SRTLA
+# Checkout the master branch and build and install srt library
+RUN git checkout master && \
+    ./configure && \
+    make -j8 && \
+    make install
+
+# Switch to the srtla repository directory
 WORKDIR /tmp/srtla
-RUN make srtla_rec
 
-# Stage 2: Final stage
-FROM ubuntu:latest
+# Checkout the master branch and build srtla library
+RUN git checkout master && \
+    make -j8 srtla_rec
 
-# Expose UDP ports
-EXPOSE 5000/udp 5001/udp
+# Switch to the sls repository directory
+WORKDIR /tmp/srt-live-server
 
-# Copy executables from build stage
-COPY --from=build /tmp/srt/srt-live-transmit /opt/srt/srt-live-transmit
-COPY --from=build /tmp/srtla/srtla_rec /opt/srtla/srtla_rec
+# Checkout the master branch and build sls library
+RUN git checkout master && \
+    make -j8
 
-# Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y bash
+# Use Alpine Linux as the final base image
+FROM alpine:latest
 
-# Set default values for environment variables
-ENV LOSSMAXTTL=40
-ENV LATENCY=2000
-ENV SOURCE_URI="srt://127.0.0.1:5002?mode=listener&lossmaxttl=${LOSSMAXTTL}&latency=${LATENCY}"
-ENV DESTINATION_URI="srt://0.0.0.0:5001?mode=listener"
+# Set environment variables
+ENV LD_LIBRARY_PATH /lib:/usr/lib:/usr/local/lib64
 
-# Run services with environment variables
-CMD (/opt/srt/srt-live-transmit -st:yes "${SOURCE_URI}" "${DESTINATION_URI}" 2>&1 | tee /dev/console) & \
-    (/opt/srtla/srtla_rec 5000 127.0.0.1 5002 2>&1 | tee /dev/console)
+# Update package repository and install necessary dependencies
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        openssl \
+		bash \
+        libstdc++
+
+# Add a user for running the application
+RUN adduser -D srt && \
+    mkdir /etc/sls /logs && \
+    chown srt /logs
+
+# Copy necessary files and directories from the build stage
+COPY --from=build /usr/local/bin/srt-* /usr/local/bin/
+COPY --from=build /usr/local/lib/libsrt* /usr/local/lib/
+COPY --from=build /tmp/srt-live-server/bin/* /usr/local/bin/
+COPY --from=build /tmp/srt/srt-live-transmit /usr/local/bin/srt-live-transmit
+COPY --from=build /tmp/srtla/srtla_rec /usr/local/bin/srtla_rec
+
+# Copy the sls.conf file to /etc/sls directory
+COPY sls.conf /etc/sls/
+
+# Create a volume for logs
+VOLUME /logs
+
+# Environment Variables
+ENV SRTLA_PORT          5000
+ENV SLS_HTTP_PORT       8181
+ENV SLS_SRT_PORT        30000
+ENV SLS_SRT_LATENCY     500
+ENV SLS_DEFAULT_SID     live/feed1
+
+# Expose ports
+EXPOSE $SLS_HTTP_PORT/tcp $SRTLA_PORT/udp $SLS_SRT_PORT/udp
+
+# Set the user to srt and the working directory to /home/srt
+USER srt
+WORKDIR /home/srt
+
+# Copy your entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+
+# Set permissions for the entrypoint script
+RUN chmod +x /entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

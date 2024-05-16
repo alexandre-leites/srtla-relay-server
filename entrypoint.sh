@@ -14,6 +14,11 @@ sed -i "s/listen [0-9]\+;/listen ${SLS_SRT_PORT};/" /etc/sls/sls.conf
 sed -i "s/latency [0-9]\+;/latency ${SLS_SRT_LATENCY};/" /etc/sls/sls.conf
 sed -i "s/default_sid publish\/[a-zA-Z0-9_]\+;/default_sid publish\/${SLS_DEFAULT_SID};/" /etc/sls/sls.conf
 
-# Start services
+# Start SLS Server
 (sls -c "/etc/sls/sls.conf" 2>&1 | tee /dev/console) &
+
+# Wait 5s
+sleep 5
+
+# Start SRTLA Receiver
 (srtla_rec ${SRTLA_PORT} 127.0.0.1 ${SLS_SRT_PORT} 2>&1 | tee /dev/console)

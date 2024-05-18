@@ -54,6 +54,7 @@ ENV LD_LIBRARY_PATH /lib:/usr/lib:/usr/local/lib64
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache \
+        supervisor \
         openssl \
 		bash \
         libstdc++
@@ -66,6 +67,7 @@ COPY --from=build /usr/local/bin/srt-* /usr/local/bin/
 COPY --from=build /usr/local/lib/libsrt* /usr/local/lib/
 COPY --from=build /tmp/srt-live-server/bin/* /usr/local/bin/
 COPY --from=build /tmp/srt/srt-live-transmit /usr/local/bin/srt-live-transmit
+COPY --from=build /tmp/srt/srt-tunnel /usr/local/bin/srt-tunnel
 COPY --from=build /tmp/srtla/srtla_rec /usr/local/bin/srtla_rec
 
 # Copy the sls.conf file to /etc/sls directory
@@ -92,11 +94,13 @@ EXPOSE $SLS_HTTP_PORT/tcp $SRTLA_PORT/udp $SLS_SRT_PORT/udp
 # Set working dir to /opt
 WORKDIR /opt
 
-# Copy your entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+# Copy necessary configurations and scripts
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY restart_all_on_exit.sh /usr/local/bin/restart_all_on_exit.sh
 
-# Set permissions for the entrypoint script
-RUN chmod +x /entrypoint.sh
+# Ensure the scripts are executable
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/restart_all_on_exit.sh
 
-# Set the entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+# Set the entrypoint to entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

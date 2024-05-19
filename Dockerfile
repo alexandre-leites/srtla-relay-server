@@ -95,12 +95,13 @@ EXPOSE $SLS_HTTP_PORT/tcp $SRTLA_PORT/udp $SLS_SRT_PORT/udp
 WORKDIR /opt
 
 # Copy necessary configurations and scripts
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY supervisord.conf /etc/supervisor/supervisord.conf
-COPY restart_all_on_exit.sh /usr/local/bin/restart_all_on_exit.sh
+COPY files/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY files/supervisord.conf /etc/supervisor/supervisord.conf
+COPY files/logprefix /usr/local/bin/logprefix
+COPY files/restart_all_on_exit /usr/local/bin/restart_all_on_exit
 
 # Ensure the scripts are executable
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/restart_all_on_exit.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/logprefix /usr/local/bin/restart_all_on_exit
 
 # Set the entrypoint to entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
